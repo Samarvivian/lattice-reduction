@@ -7,10 +7,10 @@ def main():
     # 初始化仿真服务
     simulator = SimulationService(SIMULATION_CONFIG)
 
-    # 先测试单次运行
-    print("=== 测试单次运行 ===")
-    test_rates = simulator.run_single_trial(6, 6, 1.0, 40)
-    print(f"测试结果: {test_rates}")
+    # # 先测试单次运行
+    # print("=== 测试单次运行 ===")
+    # test_rates = simulator.run_single_trial(6, 6, 1.0, 40)
+    # print(f"测试结果: {test_rates}")
 
     # 运行仿真
     gamma_dB, Rates = simulator.run_simulation()
@@ -24,9 +24,9 @@ def main():
 
 def plot_results(gamma_dB, Rates, algNames, plot_config):
     """绘制结果图表"""
-    print("\n=== 绘图数据检查 ===")
-    for i, alg_name in enumerate(algNames):
-        print(f"{alg_name}: 数据点={len(Rates[i, :])}, 有效值={np.sum(~np.isnan(Rates[i, :]))}")
+    # print("\n=== 绘图数据检查 ===")
+    # for i, alg_name in enumerate(algNames):
+    #     print(f"{alg_name}: 数据点={len(Rates[i, :])}, 有效值={np.sum(~np.isnan(Rates[i, :]))}")
 
     plt.figure(figsize=plot_config['figsize'])
     colors = plt.cm.get_cmap(plot_config['colors'])(np.linspace(0, 1, len(algNames)))
