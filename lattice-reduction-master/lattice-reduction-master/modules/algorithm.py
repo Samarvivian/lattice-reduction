@@ -3,32 +3,32 @@ from scipy.linalg import qr, pinv
 import fpylll
 
 def compute_mutual_info(H_pinv, D, a, s, P_tx, K):
-    """计算互信息（高SNR近似）,不使用格基约简"""
+    """计算互信息（高SNR近似）"""
+    # 计算接收信号的估计值
     x = H_pinv @ D @ (s + a)
+    # 计算接收信号的期望功率
     E_x = np.mean(np.abs(x) ** 2)
-    # 采用更稳健的互信息近似：sum 0.5*log2(1 + SNR_k)
-    # 这里将 P_tx 视作线性功率，噪声功率归一为1
-    d_values = np.diag(D)
-    if d_values.ndim == 0:
-        d_values = np.array([d_values])
-    snr_values = (P_tx / max(E_x, 1e-12)) * (d_values ** 2)
-    mutual_info = 0
-    for k in range(len(d_values)):
-        mutual_info += 0.5 * np.log2(1 + snr_values[k])
-    return mutual_info
+    rho = np.sqrt(P_tx / E_x)
+    product_term = np.prod(np.diag(D)**2)
+    # 计算基于HSNR近似的速率
+    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term**(1/(2*K))))
+    return rate
 
 def compute_mutual_info_lll(H_pinv, D, T ,a, s, P_tx, K):
     """计算互信息（高SNR近似）"""
+    # 计算接收信号的估计值
     x = H_pinv @ D @ T @ (s + a)
+    # 计算接收信号的期望功率
     E_x = np.mean(np.abs(x) ** 2)
-    d_values = np.diag(D)
-    if d_values.ndim == 0:
-        d_values = np.array([d_values])
-    snr_values = (P_tx / max(E_x, 1e-12)) * (d_values ** 2)
-    mutual_info = 0
-    for k in range(len(d_values)):
-        mutual_info += 0.5 * np.log2(1 + snr_values[k])
-    return mutual_info
+
+    # 计算信噪比的平方根
+    rho = np.sqrt(P_tx / E_x)
+    # 计算对角矩阵D的对角元素的平方的乘积
+    product_term = np.prod(np.diag(D) ** 2)
+    # 计算基于HSNR近似的速率
+    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term ** (1 / (2 * K))))
+    return rate
+
 def fplll_reduction(H):
     """
     使用 fpylll 库进行LLL格基约减
@@ -37,7 +37,7 @@ def fplll_reduction(H):
     m, n = H.shape
 
     # 将浮点矩阵转换为整数矩阵（需要缩放）
-    scale_factor = 1e2  # 缩放因子，将浮点数转换为整数
+    scale_factor = 1e6  # 缩放因子，将浮点数转换为整数
     H_scaled = (H * scale_factor).astype(int)
 
     # 创建整数矩阵
@@ -139,7 +139,7 @@ def compute_mutual_info_gaussian(H_pinv, D, a, s, P_tx, Nr):
 
     # 计算等效信噪比
     d_values = np.diag(D)
-    snr_values = rho ** 2 * d_values ** 2  # 高斯噪声方差为1
+    snr_values = rho ** 2 * d_values ** 2
 
     # 高斯信道的互信息：0.5 * log2(1 + SNR)
     mutual_info = 0
@@ -166,6 +166,88 @@ def nearest_plane_algorithm(H_pinv, D, s):
     根据论文公式(14): a_i = -[s_i + sum_{j>i} (r_ij/r_ii)(s_j + a_j)]
     """
     # 正确使用 D：对 H_pinv D 进行 QR 分解
+    Q, R = np.linalg.qr(H_pinv)
+    R=R@D
+    M = len(s)
+    a = np.zeros(M)
+
+    # 从最后一个元素开始向前处理（上三角）
+    for i in range(M - 1, -1, -1):
+        # 计算内部求和项
+        sum_term = 0
+        for j in range(i + 1, M):
+            sum_term += (R[i, j] / R[i, i]) * (s[j] + a[j])
+
+        # 计算 a_i = -[s_i + sum_term]
+        a[i] = -np.round(s[i] + sum_term)
+
+    return a
+
+def compute_mutual_info_ordered(H_pinv, D, a, s, P_tx, K, ordering=None):
+    """
+    计算排序后系统的互信息（高SNR近似）
+    
+    参数:
+        H_pinv: 排序后信道矩阵的伪逆
+        D: 对角矩阵
+        a: 扰动向量
+        s: 符号向量
+        P_tx: 发射功率
+        K: 用户数
+        ordering: 排序索引（用于逆排序结果）
+    """
+    # 计算接收信号的估计值
+    x = H_pinv @ D @ (s + a)
+    # 计算接收信号的期望功率
+    E_x = np.mean(np.abs(x) ** 2)
+
+    # 计算信噪比的平方根
+    rho = np.sqrt(P_tx / E_x)
+    # 计算对角矩阵D的对角元素的平方的乘积
+    product_term = np.prod(np.diag(D)**2)
+    # 计算基于HSNR近似的速率
+    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term**(1/(2*K))))
+    return rate
+
+def compute_mutual_info_lll_ordered(H_pinv, D, T, a, s, P_tx, K, ordering=None):
+    """
+    计算排序后LLL系统的互信息（高SNR近似）
+    
+    参数:
+        H_pinv: 排序后信道矩阵的伪逆
+        D: 对角矩阵
+        T: LLL变换矩阵
+        a: 扰动向量
+        s: 符号向量
+        P_tx: 发射功率
+        K: 用户数
+        ordering: 排序索引（用于逆排序结果）
+    """
+    # 计算接收信号的估计值
+    x = H_pinv @ D @ T @ (s + a)
+    # 计算接收信号的期望功率
+    E_x = np.mean(np.abs(x) ** 2)
+
+    # 计算信噪比的平方根
+    rho = np.sqrt(P_tx / E_x)
+    # 计算对角矩阵D的对角元素的平方的乘积
+    product_term = np.prod(np.diag(D) ** 2)
+    # 计算基于HSNR近似的速率
+    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term ** (1 / (2 * K))))
+    return rate
+
+def nearest_plane_algorithm_ordered(H_pinv, D, s, ordering=None):
+    """
+    排序后系统的Nearest Plane算法实现
+    根据论文公式(14): a_i = -[s_i + sum_{j>i} (r_ij/r_ii)(s_j + a_j)]
+    
+    参数:
+        H_pinv: 排序后信道矩阵的伪逆
+        D: 对角矩阵
+        s: 排序后的符号向量
+        ordering: 排序索引（用于逆排序结果）
+    """
+    # 正确使用 D：对 H_pinv D 进行 QR 分解
     Q, R = np.linalg.qr(H_pinv @ D)
 
     M = len(s)
@@ -182,4 +264,3 @@ def nearest_plane_algorithm(H_pinv, D, s):
         a[i] = -np.round(s[i] + sum_term)
 
     return a
-

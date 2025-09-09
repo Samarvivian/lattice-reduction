@@ -7,7 +7,7 @@ def main():
     # 初始化仿真服务
     simulator = SimulationService(SIMULATION_CONFIG)
 
-    # 先测试单次运行
+    # # 先测试单次运行
     print("=== 测试单次运行 ===")
     test_rates = simulator.run_single_trial(6, 6, 1.0, 40)
     print(f"测试结果: {test_rates}")
@@ -24,7 +24,7 @@ def main():
 
 def plot_results(gamma_dB, Rates, algNames, plot_config):
     """绘制结果图表"""
-    #print("\n=== 绘图数据检查 ===")
+    # print("\n=== 绘图数据检查 ===")
     # for i, alg_name in enumerate(algNames):
     #     print(f"{alg_name}: 数据点={len(Rates[i, :])}, 有效值={np.sum(~np.isnan(Rates[i, :]))}")
 
@@ -40,8 +40,8 @@ def plot_results(gamma_dB, Rates, algNames, plot_config):
                  markersize=6,
                  label=alg_name)
 
-    plt.xlabel('SNR (dB)')
-    plt.ylabel('Sum Rate (bps/Hz)')
+    plt.xlabel('γ[dB]')
+    plt.ylabel('RHSNR')
     plt.title(f'N = {SIMULATION_CONFIG["Nt"]}, K = {SIMULATION_CONFIG["Nr"]}, P_Tx = {SIMULATION_CONFIG["P_tx"]} dB')
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.grid(True, which='both', linestyle='--', alpha=0.7)
