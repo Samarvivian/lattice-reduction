@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from modules.antenna_analysis import AntennaAnalysisService
 from modules.visualization import AntennaAnalysisVisualizer
 
-def visualization(gamma_dB=-20, P_tx=40, num_trials=1000, antenna_range=(6, 11), save_dir="data/antenna_analysis"):
+def visualization(gamma_dB=-20, P_tx=10000, num_trials=1000, antenna_range=(6, 11), save_dir="data/antenna_analysis"):
     """运行真实计算的可视化（ZF/NP/NP-LLL/NP-D 的互信息随天线数变化）"""
     import os
 
@@ -67,7 +67,7 @@ def run_demo():
     
     # 设置分析参数
     gamma_dB = -20  # 病态信道条件
-    P_tx = 40       # 发射功率
+    P_tx = 10000       # 发射功率
     num_trials = 1000  # 快速测试，使用较少试验次数
     
     print(f"分析条件:")

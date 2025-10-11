@@ -26,8 +26,8 @@ def main():
     print("="*80)
     
     # 设置分析参数
-    gamma_dB = -20  # 病态信道条件
-    P_tx = 40       # 发射功率 (dB)
+    gamma_dB = 0  # 病态信道条件
+    P_tx = 40      # 发射功率 (dB)
     num_trials = 1000  # 蒙特卡洛试验次数
     antenna_range = (6, 11)  # 天线数范围 6-10
     
@@ -150,12 +150,12 @@ def generate_data_report(antenna_numbers, mutual_info_results, algorithm_names,
 
 def quick_analysis():
     """快速分析模式（减少试验次数用于测试）"""
-    print("运行快速分析模式（试验次数: 100）...")
+    print("运行快速分析模式（试验次数: 1000）...")
     
     # 设置分析参数
     gamma_dB = -20
-    P_tx = 40
-    num_trials = 100  # 减少试验次数
+    P_tx = 10000
+    num_trials = 1000  # 减少试验次数
     antenna_range = (6, 11)
     
     # 创建分析服务
@@ -182,15 +182,18 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description='天线数分析程序')
-    parser.add_argument('--quick', action='store_true', 
+    parser.add_argument('--quick', action='store_true',
                        help='运行快速分析模式（减少试验次数）')
     
     args = parser.parse_args()
-    
+
     if args.quick:
         quick_analysis()
     else:
         main()
+
+
+
 
 
 

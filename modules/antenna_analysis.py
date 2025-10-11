@@ -76,7 +76,8 @@ class AntennaAnalysisService:
         rate_sum = np.zeros(len(self.algorithm_names))
         
         for trial in range(self.num_trials):
-            # 生成信道
+            # 生成信道 - 损失gamma只作用在user 1上
+            # 其他用户保持标准信道增益
             Hc = generate_channel(N, N, lost)
             H_real = real_value_transform(Hc)
             H_pinv = pinv(H_real)
@@ -150,7 +151,7 @@ class AntennaAnalysisService:
         rho = np.sqrt(P_tx / E_x)
         product_term = np.prod(np.diag(D) ** 2)
         # 计算基于HSNR近似的速率
-        rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term ** (1 / (K))))
+        rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term ** (1 / (2 * K))))
         return rate
     
     def save_results(self, antenna_numbers, mutual_info_results, filename='antenna_analysis_results.npz'):

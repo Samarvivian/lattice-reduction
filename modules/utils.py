@@ -1,11 +1,28 @@
 import numpy as np
 
 def generate_channel(K, N, lost):
-    """生成复高斯信道"""
-    Hc = (np.random.randn(K, N) + 1j * np.random.randn(K, N))/np.sqrt(2)
+    """
+    生成复高斯信道，损失gamma只作用在user 1上
+    
+    参数:
+        K: 用户数 (接收天线数)
+        N: 发射天线数
+        lost: 损失因子 (线性值，10^(gamma_dB/10))
+    
+    返回:
+        Hc: 复值信道矩阵 (K x N)
+    """
+    # 生成标准复高斯信道矩阵
+    Hc = (np.random.randn(K, N) + 1j * np.random.randn(K, N)) / np.sqrt(2)
+    
+    # 只对第一个用户（user 1）应用损失
+    # 其他用户保持标准信道增益
     Hc[0, :] = Hc[0, :] * np.sqrt(lost)
-    #print(Hc)
-    #print(f"Hc 的维度: {Hc.shape}")
+    
+    # 确保其他用户没有损失（保持单位增益）
+    for k in range(1, K):
+        Hc[k, :] = Hc[k, :]  # 其他用户保持原始增益
+    
     return Hc
 
 def real_value_transform(Hc):

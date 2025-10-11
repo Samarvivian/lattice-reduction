@@ -11,7 +11,7 @@ def compute_mutual_info(H_pinv, D, a, s, P_tx, K):
     rho = np.sqrt(P_tx / E_x)
     product_term = np.prod(np.diag(D)**2)
     # 计算基于HSNR近似的速率
-    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term**(1/(K))))
+    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term**(1/(2*K))))
     return rate
 
 def compute_mutual_info_lll(H_pinv, D, T ,a, s, P_tx, K):
@@ -26,7 +26,7 @@ def compute_mutual_info_lll(H_pinv, D, T ,a, s, P_tx, K):
     # 计算对角矩阵D的对角元素的平方的乘积
     product_term = np.prod(np.diag(D) ** 2)
     # 计算基于HSNR近似的速率
-    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term ** (1 / (K))))
+    rate = K * np.log2((P_tx / (np.pi * np.e * E_x)) * (product_term ** (1 / (2*K))))
     return rate
 
 def fplll_reduction(H):
