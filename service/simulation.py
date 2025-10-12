@@ -1,14 +1,14 @@
 import numpy as np
 import time
 from scipy.linalg import pinv
-from modules.algorithm import compute_mutual_info, fplll_reduction,compute_mutual_info_gaussian,compute_dpc_rate,nearest_plane_algorithm,compute_mutual_info_lll,compute_mutual_info_ordered,compute_mutual_info_lll_ordered,nearest_plane_algorithm_ordered,compute_mutual_info_upper_bound
+from modules.algorithm import compute_mutual_info, fplll_reduction,compute_mutual_info_gaussian,compute_dpc_rate,nearest_plane_algorithm,compute_mutual_info_lll,compute_mutual_info_ordered,compute_mutual_info_lll_ordered,nearest_plane_algorithm_ordered,compute_mutual_info_upper_bound,mi_mmse
 from modules.utils import generate_channel, real_value_transform, calculate_optimal_D
 from scipy.special import gamma,loggamma
 
 class SimulationService:
     def __init__(self, config):
         self.config = config
-        self.algNames = ['RO', 'RO-LLL', 'RO-D', 'RO-D-LLL','NP','NP-LLL','NP-D','NP-D-LLL', 'Upper-Bound']
+        self.algNames = ['RO', 'RO-LLL', 'RO-D', 'RO-D-LLL','NP','NP-LLL','NP-D','NP-D-LLL', 'MMSE', 'Upper-Bound']
 
     def run_simulation(self):
         """运行完整仿真"""
@@ -160,7 +160,13 @@ class SimulationService:
         # a_np_d_lll_ordered = T_lll_np_ordered @ a_np_ordered
         # rates.append(compute_mutual_info_lll_ordered(H_ordered_pinv, D_opt_np_ordered, T_lll_np_ordered, a_np_d_lll_ordered, s_np_d_lll_ordered, P_tx, Nr, ordering))
         #
-        # 9. Upper-Bound
+        # 9. MMSE
+        D_mmse = np.eye(2*Nr)  # 使用单位矩阵作为D矩阵
+        N0 = 1.0  # 噪声功率，可以根据需要调整
+        mmse_rate = mi_mmse(H_real, D_mmse, P_tx, N0)
+        rates.append(mmse_rate)
+
+        # 10. Upper-Bound
         upper_bound = compute_mutual_info_upper_bound(H_real, P_tx, Nr)
         rates.append(upper_bound)
 

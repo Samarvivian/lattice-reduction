@@ -42,6 +42,16 @@ def plot_results(gamma_dB, Rates, algNames, plot_config):
                      markersize=8,
                      label=alg_name,
                      alpha=0.8)
+        elif alg_name == 'MMSE':
+            # 为MMSE设置特殊样式
+            plt.plot(gamma_dB, Rates[i, :],
+                     color='blue',
+                     linewidth=3,
+                     linestyle='-',
+                     marker='o',
+                     markersize=8,
+                     label=alg_name,
+                     alpha=0.9)
         else:
             plt.plot(gamma_dB, Rates[i, :],
                      color=colors[i],

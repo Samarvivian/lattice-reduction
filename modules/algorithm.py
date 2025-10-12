@@ -266,6 +266,44 @@ def nearest_plane_algorithm_ordered(H_pinv, D, s, ordering=None):
     return a
 
 
+def mi_mmse(H, D, Ptx, N0, alpha=None):
+    """
+    返回 I(D) = mutual information for MMSE precoder with power Ptx and noise N0.
+    H: (K, Nt) channel matrix
+    D: (K, K) rate allocation matrix (一般对角)
+    Ptx: transmit power (scalar)
+    N0: noise power (scalar)
+    alpha: regularization scalar. If None, set alpha = K * N0 / Ptx
+    """
+    K, Nt = H.shape[0], H.shape[1]
+    if alpha is None:
+        alpha = (K * N0) / Ptx
+
+    A = H @ H.conj().T               # (K, K)
+    B = np.linalg.inv(A + alpha * np.eye(K))  # (K, K)
+
+    # 计算 M(D) 和 T(D)
+    # M = A B D D^H B A
+    M = A @ B @ D @ D.conj().T @ B @ A
+    # T = tr( B D D^H B A )
+    T = np.trace(B @ D @ D.conj().T @ B @ A).real
+    if T <= 0:
+        raise ValueError("trace for normalization nonpositive: T={}".format(T))
+
+    coef = (Ptx / N0) / T
+
+    # 计算 log-det 稳定写法
+    mat = np.eye(K) + coef * M
+    sign, logdet = np.linalg.slogdet(mat)
+    if sign <= 0:
+        # 数值问题：若 sign <=0, 直接用 det 并取实部（谨慎）
+        val = np.log2(np.real(np.linalg.det(mat)))
+    else:
+        val = logdet / np.log(2.0)
+
+    return val
+
+
 def compute_mutual_info_upper_bound(Hc, P_tx, K):
     """
     计算互信息的upper-bound
